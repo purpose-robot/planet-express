@@ -1,0 +1,24 @@
+{{ define "subject" }}Welcome to the Planet Express framework!{{ end }}
+
+{{ define "content" }}
+        {{ with .Views }}
+        Hello,
+
+        thanks for signing up for an account. I am excited to have you on board!
+
+        For future reference, your user ID is {{ .UserID }}.
+
+        Please send an HTTP request to the `PUT /api/v1/users/activate` endpoint
+        with the following JSON body to activate your account:
+
+        {"token": "{{ .Token }}"}
+
+        Please note that this is a one-time use token and it will expire in {{ .Expiry }}.
+
+        Thanks,
+
+        The Planet Express team
+
+        {{- /*gotype: github.com/purpose-robot/planet-express/internal/auth.activationEmail*/ -}}
+    {{ end }}
+{{ end }}

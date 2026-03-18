@@ -1,0 +1,6 @@
+Value RELEASE (\S+)
+Value VERSION (.+?)
+Value SOFTWARE_IMAGE (\S+)
+
+Start
+  ^.*Software,*\s+\(${SOFTWARE_IMAGE}\),\sVersion\s${VERSION},*\s+RELEASE.*\(${RELEASE}\)
