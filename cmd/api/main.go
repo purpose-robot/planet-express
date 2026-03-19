@@ -97,7 +97,7 @@ func run(ctx context.Context, w io.Writer, _ []string) error {
 
 	collector := ciscossh.NewInventoryCollector(ciscossh.Config{
 		Port:             config.Service.Cisco.SSH.Port,
-		Timeout:          config.Service.Cisco.SSH.Timeout,
+		CloseTimeout:     config.Service.Cisco.SSH.CloseTimeout,
 		TCPDialTimeout:   config.Service.Cisco.SSH.TCPDialTimeout,
 		OperationTimeout: config.Service.Cisco.SSH.OperationTimeout,
 	})
