@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/purpose-robot/planet-express/internal/auth"
-	"github.com/purpose-robot/planet-express/internal/bessie"
+	"github.com/purpose-robot/planet-express/internal/cisco"
 	"github.com/purpose-robot/planet-express/internal/health"
 	"github.com/purpose-robot/planet-express/internal/krypto"
 )
@@ -46,10 +46,10 @@ type emailConfig struct {
 }
 
 type serviceConfig struct {
-	Auth   authServiceConfig
-	Email  emailServiceConfig
-	River  riverConfig
-	Bessie bessieServiceConfig
+	Auth  authServiceConfig
+	Email emailServiceConfig
+	River riverConfig
+	Cisco ciscoServiceConfig
 }
 
 type postgresConfig struct {
@@ -90,11 +90,11 @@ type riverConfig struct {
 	ShutdownTimeout time.Duration
 }
 
-type bessieServiceConfig struct {
-	SSH bessieSSHConfig
+type ciscoServiceConfig struct {
+	SSH ciscoSSHConfig
 }
 
-type bessieSSHConfig struct {
+type ciscoSSHConfig struct {
 	Port             int
 	Timeout          time.Duration
 	TCPDialTimeout   time.Duration
@@ -118,10 +118,10 @@ func defaultConfig() Config {
 		Service: serviceConfig{
 			Auth: authServiceConfig{
 				DefaultPermissions: []auth.Permission{
-					bessie.PermissionCredentialsRead,
-					bessie.PermissionCredentialsWrite,
-					bessie.PermissionNetworkDevicesRead,
-					bessie.PermissionNetworkDevicesWrite,
+					cisco.PermissionCredentialsRead,
+					cisco.PermissionCredentialsWrite,
+					cisco.PermissionNetworkDevicesRead,
+					cisco.PermissionNetworkDevicesWrite,
 					health.PermissionRead,
 				},
 				ActivationExpiry:     24 * time.Hour,
@@ -136,8 +136,8 @@ func defaultConfig() Config {
 				JobTimeout:      time.Minute,
 				ShutdownTimeout: 10 * time.Second,
 			},
-			Bessie: bessieServiceConfig{
-				SSH: bessieSSHConfig{
+			Cisco: ciscoServiceConfig{
+				SSH: ciscoSSHConfig{
 					Port:             22,
 					Timeout:          10 * time.Second,
 					TCPDialTimeout:   10 * time.Second,
@@ -332,27 +332,27 @@ var envMap = map[string]envVariable{
 		},
 	},
 
-	"SERVICE_BESSIE_SSH_PORT": {
+	"SERVICE_CISCO_SSH_PORT": {
 		mapFunc: func(v string, c *Config) error {
-			return confInt(v, &c.Service.Bessie.SSH.Port, 1, 65535)
+			return confInt(v, &c.Service.Cisco.SSH.Port, 1, 65535)
 		},
 	},
 
-	"SERVICE_BESSIE_SSH_TIMEOUT": {
+	"SERVICE_CISCO_SSH_TIMEOUT": {
 		mapFunc: func(v string, c *Config) error {
-			return confDuration(v, &c.Service.Bessie.SSH.Timeout, time.Second, 30*time.Second)
+			return confDuration(v, &c.Service.Cisco.SSH.Timeout, time.Second, 30*time.Second)
 		},
 	},
 
-	"SERVICE_BESSIE_SSH_TCP_DIAL_TIMEOUT": {
+	"SERVICE_CISCO_SSH_TCP_DIAL_TIMEOUT": {
 		mapFunc: func(v string, c *Config) error {
-			return confDuration(v, &c.Service.Bessie.SSH.TCPDialTimeout, time.Second, time.Minute)
+			return confDuration(v, &c.Service.Cisco.SSH.TCPDialTimeout, time.Second, time.Minute)
 		},
 	},
 
-	"SERVICE_BESSIE_SSH_OPERATION_TIMEOUT": {
+	"SERVICE_CISCO_SSH_OPERATION_TIMEOUT": {
 		mapFunc: func(v string, c *Config) error {
-			return confDuration(v, &c.Service.Bessie.SSH.OperationTimeout, time.Second, 2*time.Minute)
+			return confDuration(v, &c.Service.Cisco.SSH.OperationTimeout, time.Second, 2*time.Minute)
 		},
 	},
 }

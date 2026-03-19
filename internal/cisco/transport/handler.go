@@ -9,14 +9,14 @@ import (
 
 	"github.com/gofrs/uuid/v5"
 	authmiddleware "github.com/purpose-robot/planet-express/internal/auth/middleware"
-	"github.com/purpose-robot/planet-express/internal/bessie"
+	"github.com/purpose-robot/planet-express/internal/cisco"
 	"github.com/purpose-robot/planet-express/internal/errorz"
 	"github.com/purpose-robot/planet-express/internal/httpz"
 )
 
 type service interface {
-	AddCredential(ctx context.Context, cmd bessie.AddCredential) (bessie.AddCredentialResult, error)
-	AddNetworkDevice(ctx context.Context, cmd bessie.AddNetworkDevice) (bessie.AddNetworkDeviceResult, error)
+	AddCredential(ctx context.Context, cmd cisco.AddCredential) (cisco.AddCredentialResult, error)
+	AddNetworkDevice(ctx context.Context, cmd cisco.AddNetworkDevice) (cisco.AddNetworkDeviceResult, error)
 }
 
 type Handler struct {
@@ -53,7 +53,7 @@ func (h *Handler) AddCredential(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	result, err := h.service.AddCredential(r.Context(), bessie.AddCredential{
+	result, err := h.service.AddCredential(r.Context(), cisco.AddCredential{
 		UserID:      new(user.ID()),
 		Username:    in.Username,
 		Password:    in.Password,
@@ -66,10 +66,10 @@ func (h *Handler) AddCredential(w http.ResponseWriter, r *http.Request) {
 	}
 
 	type output struct {
-		ID          uuid.UUID         `json:"id"`
-		Username    string            `json:"username"`
-		AuthMethod  bessie.AuthMethod `json:"auth_method"`
-		Description *string           `json:"description"`
+		ID          uuid.UUID        `json:"id"`
+		Username    string           `json:"username"`
+		AuthMethod  cisco.AuthMethod `json:"auth_method"`
+		Description *string          `json:"description"`
 	}
 
 	err = httpz.WriteJSON(w, http.StatusCreated, httpz.Envelope{"response": output{
@@ -115,7 +115,7 @@ func (h *Handler) AddNetworkDevice(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	result, err := h.service.AddNetworkDevice(r.Context(), bessie.AddNetworkDevice{
+	result, err := h.service.AddNetworkDevice(r.Context(), cisco.AddNetworkDevice{
 		UserID:       user.ID(),
 		IPAddress:    in.IPAddress,
 		CredentialID: credentialID,
@@ -126,9 +126,9 @@ func (h *Handler) AddNetworkDevice(w http.ResponseWriter, r *http.Request) {
 	}
 
 	type output struct {
-		ID             uuid.UUID         `json:"id"`
-		IPAddress      netip.Addr        `json:"ip_address"`
-		LastSyncStatus bessie.SyncStatus `json:"last_sync_status"`
+		ID             uuid.UUID        `json:"id"`
+		IPAddress      netip.Addr       `json:"ip_address"`
+		LastSyncStatus cisco.SyncStatus `json:"last_sync_status"`
 	}
 
 	err = httpz.WriteJSON(w, http.StatusCreated, httpz.Envelope{"response": output{

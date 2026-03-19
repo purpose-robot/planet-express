@@ -8,7 +8,7 @@ import (
 	"github.com/gofrs/uuid/v5"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
-	"github.com/purpose-robot/planet-express/internal/bessie"
+	"github.com/purpose-robot/planet-express/internal/cisco"
 	"github.com/purpose-robot/planet-express/internal/krypto"
 )
 
@@ -31,7 +31,7 @@ func NewCredentialRepository(dbPool dbPool, encryptor *krypto.Encryptor, blindIn
 	}
 }
 
-func (r *CredentialRepository) scanCredential(row pgx.Row) (*bessie.Credential, error) {
+func (r *CredentialRepository) scanCredential(row pgx.Row) (*cisco.Credential, error) {
 	var (
 		id                uuid.UUID
 		createdAt         time.Time
@@ -39,7 +39,7 @@ func (r *CredentialRepository) scanCredential(row pgx.Row) (*bessie.Credential, 
 		userID            *uuid.UUID
 		username          string
 		encryptedPassword []byte
-		authMethod        bessie.AuthMethod
+		authMethod        cisco.AuthMethod
 		description       *string
 		lastUsedAt        *time.Time
 	)
@@ -66,12 +66,12 @@ func (r *CredentialRepository) scanCredential(row pgx.Row) (*bessie.Credential, 
 		return nil, err
 	}
 
-	return bessie.UnmarshalCredential(
+	return cisco.UnmarshalCredential(
 		id, createdAt, updatedAt, userID, username, string(decryptedPassword), authMethod, description, lastUsedAt,
 	), nil
 }
 
-func (r *CredentialRepository) Insert(ctx context.Context, credentials *bessie.Credential) error {
+func (r *CredentialRepository) Insert(ctx context.Context, credentials *cisco.Credential) error {
 	encryptedPassword, err := r.encryptor.Encrypt([]byte(credentials.Password()))
 	if err != nil {
 		return err
@@ -100,7 +100,7 @@ func (r *CredentialRepository) Insert(ctx context.Context, credentials *bessie.C
 	return mapRepositoryError(err)
 }
 
-func (r *CredentialRepository) GetByID(ctx context.Context, id uuid.UUID) (*bessie.Credential, error) {
+func (r *CredentialRepository) GetByID(ctx context.Context, id uuid.UUID) (*cisco.Credential, error) {
 	stmt := `
 		SELECT id, created_at, updated_at, user_id, username, encrypted_password, auth_method, description, last_used_at
 		FROM plnx_credentials
@@ -119,7 +119,7 @@ func NewNetworkDeviceRepository(dbPool dbPool) *NetworkDeviceRepository {
 	}
 }
 
-func (r *NetworkDeviceRepository) scanNetworkDevice(row pgx.Row) (*bessie.NetworkDevice, error) {
+func (r *NetworkDeviceRepository) scanNetworkDevice(row pgx.Row) (*cisco.NetworkDevice, error) {
 	var (
 		id                  uuid.UUID
 		createdAt           time.Time
@@ -131,7 +131,7 @@ func (r *NetworkDeviceRepository) scanNetworkDevice(row pgx.Row) (*bessie.Networ
 		softwareVersion     *string
 		sshActive           *bool
 		netconfActive       *bool
-		lastSyncStatus      bessie.SyncStatus
+		lastSyncStatus      cisco.SyncStatus
 		lastSyncAttemptedAt *time.Time
 	)
 
@@ -155,10 +155,10 @@ func (r *NetworkDeviceRepository) scanNetworkDevice(row pgx.Row) (*bessie.Networ
 		return nil, mapRepositoryError(err)
 	}
 
-	return bessie.UnmarshalNetworkDevice(id, createdAt, updatedAt, ipAddress, hostname, serialNumber, productID, softwareVersion, sshActive, netconfActive, lastSyncStatus, lastSyncAttemptedAt), nil
+	return cisco.UnmarshalNetworkDevice(id, createdAt, updatedAt, ipAddress, hostname, serialNumber, productID, softwareVersion, sshActive, netconfActive, lastSyncStatus, lastSyncAttemptedAt), nil
 }
 
-func (r *NetworkDeviceRepository) Insert(ctx context.Context, networkDevice *bessie.NetworkDevice) (bool, error) {
+func (r *NetworkDeviceRepository) Insert(ctx context.Context, networkDevice *cisco.NetworkDevice) (bool, error) {
 	stmt := `
 		INSERT INTO plnx_network_devices (
 			id, created_at, updated_at, ip_address, last_sync_status
@@ -178,7 +178,7 @@ func (r *NetworkDeviceRepository) Insert(ctx context.Context, networkDevice *bes
 	return tag.RowsAffected() == 1, mapRepositoryError(err)
 }
 
-func (r *NetworkDeviceRepository) GetByID(ctx context.Context, id uuid.UUID) (*bessie.NetworkDevice, error) {
+func (r *NetworkDeviceRepository) GetByID(ctx context.Context, id uuid.UUID) (*cisco.NetworkDevice, error) {
 	stmt := `
 		SELECT id, created_at, updated_at, ip_address, hostname, serial_number, product_id, software_version, ssh_active, netconf_active, last_sync_status, last_sync_attempted_at
 		FROM plnx_network_devices
@@ -187,7 +187,7 @@ func (r *NetworkDeviceRepository) GetByID(ctx context.Context, id uuid.UUID) (*b
 	return r.scanNetworkDevice(r.dbPool.QueryRow(ctx, stmt, pgx.NamedArgs{"id": id}))
 }
 
-func (r *NetworkDeviceRepository) UpdateByID(ctx context.Context, id uuid.UUID, updateFn func(nd *bessie.NetworkDevice) error) error {
+func (r *NetworkDeviceRepository) UpdateByID(ctx context.Context, id uuid.UUID, updateFn func(nd *cisco.NetworkDevice) error) error {
 	selectStmt := `
 		SELECT id, created_at, updated_at, ip_address, hostname, serial_number, product_id, software_version, ssh_active, netconf_active, last_sync_status, last_sync_attempted_at
 		FROM plnx_network_devices

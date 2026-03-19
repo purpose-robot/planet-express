@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/purpose-robot/planet-express/internal/bessie"
+	"github.com/purpose-robot/planet-express/internal/cisco"
 	"github.com/scrapli/scrapligo/v2/cli"
 	"github.com/scrapli/scrapligo/v2/options"
 	"github.com/sirikothe/gotextfsm"
@@ -26,7 +26,7 @@ type Config struct {
 func (c *Client) Open(ctx context.Context) error {
 	_, err := c.conn.Open(ctx)
 	if err != nil {
-		return fmt.Errorf("%w: %w", bessie.ErrDiscovererConnectionFailed, err)
+		return fmt.Errorf("%w: %w", cisco.ErrDiscovererConnectionFailed, err)
 	}
 
 	return nil
@@ -37,7 +37,7 @@ func (c *Client) Close(ctx context.Context) error {
 	return err
 }
 
-func NewClient(host string, credential *bessie.Credential, config Config) (*Client, error) {
+func NewClient(host string, credential *cisco.Credential, config Config) (*Client, error) {
 	opts := []options.Option{
 		options.WithTransportSSH2(),
 		options.WithPort(uint16(config.Port)),
@@ -49,13 +49,13 @@ func NewClient(host string, credential *bessie.Credential, config Config) (*Clie
 
 	conn, err := cli.NewCli(host, opts...)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %w", bessie.ErrDiscovererInvalidOptions, err)
+		return nil, fmt.Errorf("%w: %w", cisco.ErrDiscovererInvalidOptions, err)
 	}
 
 	return &Client{conn: conn}, nil
 }
 
-func (c *Client) CollectInventory(ctx context.Context) (bessie.NetworkDeviceInventory, error) {
+func (c *Client) CollectInventory(ctx context.Context) (cisco.NetworkDeviceInventory, error) {
 	softwareVersion, err := c.fetchString(
 		ctx,
 		"show version",
@@ -63,10 +63,10 @@ func (c *Client) CollectInventory(ctx context.Context) (bessie.NetworkDeviceInve
 		"VERSION",
 	)
 	if err != nil {
-		return bessie.NetworkDeviceInventory{}, err
+		return cisco.NetworkDeviceInventory{}, err
 	}
 
-	return bessie.NetworkDeviceInventory{SoftwareVersion: softwareVersion}, nil
+	return cisco.NetworkDeviceInventory{SoftwareVersion: softwareVersion}, nil
 }
 
 func (c *Client) fetchString(ctx context.Context, input, templatePath, key string) (string, error) {
@@ -77,7 +77,7 @@ func (c *Client) fetchString(ctx context.Context, input, templatePath, key strin
 
 	value, ok := rows[0][key].(string)
 	if !ok || strings.TrimSpace(value) == "" {
-		return "", fmt.Errorf("%w: missing or invalid key %q", bessie.ErrDiscovererUnexpectedOutput, key)
+		return "", fmt.Errorf("%w: missing or invalid key %q", cisco.ErrDiscovererUnexpectedOutput, key)
 	}
 
 	return strings.TrimSpace(value), nil
@@ -86,30 +86,30 @@ func (c *Client) fetchString(ctx context.Context, input, templatePath, key strin
 func (c *Client) parseMap(ctx context.Context, input, templatePath string) ([]map[string]any, error) {
 	resp, err := c.conn.SendInput(ctx, input)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %w", bessie.ErrDiscovererConnectionLost, err)
+		return nil, fmt.Errorf("%w: %w", cisco.ErrDiscovererConnectionLost, err)
 	}
 
 	if resp.Failed() {
-		return nil, fmt.Errorf("%w: %s", bessie.ErrDiscovererInputFailed, strings.TrimSpace(resp.ResultsFailedIndicator))
+		return nil, fmt.Errorf("%w: %s", cisco.ErrDiscovererInputFailed, strings.TrimSpace(resp.ResultsFailedIndicator))
 	}
 
 	template, err := templatesFS.ReadFile(templatePath)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %w", bessie.ErrDiscovererInvalidOptions, err)
+		return nil, fmt.Errorf("%w: %w", cisco.ErrDiscovererInvalidOptions, err)
 	}
 
 	fsm := gotextfsm.TextFSM{}
 	if err := fsm.ParseString(string(template)); err != nil {
-		return nil, fmt.Errorf("%w: %w", bessie.ErrDiscovererInvalidOptions, err)
+		return nil, fmt.Errorf("%w: %w", cisco.ErrDiscovererInvalidOptions, err)
 	}
 
 	output := gotextfsm.ParserOutput{}
 	if err := output.ParseTextString(resp.Result(), fsm, true); err != nil {
-		return nil, fmt.Errorf("%w: %w", bessie.ErrDiscovererUnexpectedOutput, err)
+		return nil, fmt.Errorf("%w: %w", cisco.ErrDiscovererUnexpectedOutput, err)
 	}
 
 	if len(output.Dict) == 0 {
-		return nil, fmt.Errorf("%w: returned response map is empty", bessie.ErrDiscovererUnexpectedOutput)
+		return nil, fmt.Errorf("%w: returned response map is empty", cisco.ErrDiscovererUnexpectedOutput)
 	}
 
 	return output.Dict, nil

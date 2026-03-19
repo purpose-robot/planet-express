@@ -7,7 +7,7 @@ import (
 	"net/netip"
 	"strconv"
 
-	"github.com/purpose-robot/planet-express/internal/bessie"
+	"github.com/purpose-robot/planet-express/internal/cisco"
 )
 
 type InventoryCollector struct {
@@ -28,7 +28,7 @@ func (c *InventoryCollector) ensureReachable(ctx context.Context, ipAddress neti
 
 	conn, err := dialer.DialContext(dialCtx, "tcp", net.JoinHostPort(ipAddress.String(), strconv.Itoa(c.config.Port)))
 	if err != nil {
-		return fmt.Errorf("%w: %w", bessie.ErrDiscovererConnectionFailed, err)
+		return fmt.Errorf("%w: %w", cisco.ErrDiscovererConnectionFailed, err)
 	}
 	defer func() {
 		_ = conn.Close()
@@ -37,30 +37,30 @@ func (c *InventoryCollector) ensureReachable(ctx context.Context, ipAddress neti
 	return nil
 }
 
-func (c *InventoryCollector) Collect(ctx context.Context, ipAddress netip.Addr, credential *bessie.Credential) (bessie.NetworkDeviceInventory, error) {
+func (c *InventoryCollector) Collect(ctx context.Context, ipAddress netip.Addr, credential *cisco.Credential) (cisco.NetworkDeviceInventory, error) {
 	if err := ctx.Err(); err != nil {
-		return bessie.NetworkDeviceInventory{}, err
+		return cisco.NetworkDeviceInventory{}, err
 	}
 
 	if !ipAddress.IsValid() {
-		return bessie.NetworkDeviceInventory{}, fmt.Errorf("%w: invalid IP address", bessie.ErrDiscovererInvalidOptions)
+		return cisco.NetworkDeviceInventory{}, fmt.Errorf("%w: invalid IP address", cisco.ErrDiscovererInvalidOptions)
 	}
 
 	if credential == nil {
-		return bessie.NetworkDeviceInventory{}, fmt.Errorf("%w: credential cannot be nil", bessie.ErrDiscovererInvalidOptions)
+		return cisco.NetworkDeviceInventory{}, fmt.Errorf("%w: credential cannot be nil", cisco.ErrDiscovererInvalidOptions)
 	}
 
 	if err := c.ensureReachable(ctx, ipAddress); err != nil {
-		return bessie.NetworkDeviceInventory{}, err
+		return cisco.NetworkDeviceInventory{}, err
 	}
 
 	client, err := NewClient(ipAddress.String(), credential, c.config)
 	if err != nil {
-		return bessie.NetworkDeviceInventory{}, err
+		return cisco.NetworkDeviceInventory{}, err
 	}
 
 	if err := client.Open(ctx); err != nil {
-		return bessie.NetworkDeviceInventory{}, err
+		return cisco.NetworkDeviceInventory{}, err
 	}
 	defer func() {
 		closeCtx, cancel := context.WithTimeout(context.Background(), c.config.Timeout)

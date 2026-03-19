@@ -5,7 +5,7 @@ import (
 
 	"github.com/gofrs/uuid/v5"
 	"github.com/jackc/pgx/v5"
-	"github.com/purpose-robot/planet-express/internal/bessie"
+	"github.com/purpose-robot/planet-express/internal/cisco"
 	"github.com/riverqueue/river"
 )
 
@@ -22,7 +22,7 @@ func NewNetworkDeviceJobRepository(tx pgx.Tx, riverClient *river.Client[pgx.Tx])
 }
 
 func (r *NetworkDeviceJobRepository) CreateNetworkDeviceSyncJob(ctx context.Context, credentialID, networkDeviceID uuid.UUID) error {
-	args := bessie.SyncNetworkDeviceArgs{
+	args := cisco.SyncNetworkDeviceArgs{
 		CredentialID:    credentialID,
 		NetworkDeviceID: networkDeviceID,
 	}

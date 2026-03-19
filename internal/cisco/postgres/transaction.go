@@ -8,7 +8,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	auditriverx "github.com/purpose-robot/planet-express/internal/audit/riverx"
-	"github.com/purpose-robot/planet-express/internal/bessie"
+	"github.com/purpose-robot/planet-express/internal/cisco"
 	"github.com/purpose-robot/planet-express/internal/krypto"
 	"github.com/riverqueue/river"
 )
@@ -51,9 +51,9 @@ func NewStore(dbPool *pgxpool.Pool, encryptor *krypto.Encryptor, blindIndex kryp
 	}
 }
 
-func (s *Store) Transact(ctx context.Context, txFunc func(adapters bessie.Adapters) error) error {
+func (s *Store) Transact(ctx context.Context, txFunc func(adapters cisco.Adapters) error) error {
 	return runInTx(ctx, s.dbPool, func(tx pgx.Tx) error {
-		adapters := bessie.Adapters{
+		adapters := cisco.Adapters{
 			AuditLogRepository: auditriverx.NewAuditLogJobRepository(tx, s.riverClient),
 
 			CredentialRepository:       NewCredentialRepository(tx, s.encryptor, s.blindIndex),

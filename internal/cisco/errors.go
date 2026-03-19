@@ -1,4 +1,4 @@
-package bessie
+package cisco
 
 import (
 	"errors"

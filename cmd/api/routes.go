@@ -5,8 +5,8 @@ import (
 
 	authmiddleware "github.com/purpose-robot/planet-express/internal/auth/middleware"
 	authtransport "github.com/purpose-robot/planet-express/internal/auth/transport"
-	"github.com/purpose-robot/planet-express/internal/bessie"
-	bessietransport "github.com/purpose-robot/planet-express/internal/bessie/transport"
+	"github.com/purpose-robot/planet-express/internal/cisco"
+	ciscotransport "github.com/purpose-robot/planet-express/internal/cisco/transport"
 	"github.com/purpose-robot/planet-express/internal/health"
 	healthtransport "github.com/purpose-robot/planet-express/internal/health/transport"
 	"github.com/purpose-robot/planet-express/internal/httpz"
@@ -16,7 +16,7 @@ func (app *application) routes() http.Handler {
 	mux := http.NewServeMux()
 
 	authTransport := authtransport.NewHandler(app.logger, app.authService)
-	bessieTransport := bessietransport.NewHandler(app.logger, app.bessieService)
+	ciscoTransport := ciscotransport.NewHandler(app.logger, app.ciscoService)
 	healthTransport := healthtransport.NewHandler(app.logger, app.healthService)
 
 	httpMiddleware := httpz.NewMiddleware(app.logger, httpz.LimiterConfig{
@@ -45,12 +45,12 @@ func (app *application) routes() http.Handler {
 
 	mux.HandleFunc(
 		"POST /api/v1/credentials",
-		authMiddleware.RequirePermission(bessie.PermissionCredentialsWrite, bessieTransport.AddCredential),
+		authMiddleware.RequirePermission(cisco.PermissionCredentialsWrite, ciscoTransport.AddCredential),
 	)
 
 	mux.HandleFunc(
 		"POST /api/v1/network-devices",
-		authMiddleware.RequirePermission(bessie.PermissionNetworkDevicesWrite, bessieTransport.AddNetworkDevice),
+		authMiddleware.RequirePermission(cisco.PermissionNetworkDevicesWrite, ciscoTransport.AddNetworkDevice),
 	)
 
 	return httpMiddleware.LogRequests(httpMiddleware.RecoverPanic(httpMiddleware.RateLimit(authMiddleware.Authenticate(mux))))

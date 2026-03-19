@@ -1,4 +1,4 @@
-package bessie
+package cisco
 
 import "github.com/purpose-robot/planet-express/internal/auth"
 

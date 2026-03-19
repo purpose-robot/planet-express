@@ -16,9 +16,9 @@ import (
 	auditriverx "github.com/purpose-robot/planet-express/internal/audit/riverx"
 	"github.com/purpose-robot/planet-express/internal/auth"
 	authpostgres "github.com/purpose-robot/planet-express/internal/auth/postgres"
-	"github.com/purpose-robot/planet-express/internal/bessie"
-	bessiepostgres "github.com/purpose-robot/planet-express/internal/bessie/postgres"
-	bessiessh "github.com/purpose-robot/planet-express/internal/bessie/ssh"
+	"github.com/purpose-robot/planet-express/internal/cisco"
+	ciscopostgres "github.com/purpose-robot/planet-express/internal/cisco/postgres"
+	ciscossh "github.com/purpose-robot/planet-express/internal/cisco/ssh"
 	"github.com/purpose-robot/planet-express/internal/config"
 	"github.com/purpose-robot/planet-express/internal/email"
 	"github.com/purpose-robot/planet-express/internal/email/smtp"
@@ -45,7 +45,7 @@ type application struct {
 	config        config.Config
 	riverClient   *river.Client[pgx.Tx]
 	authService   *auth.Service
-	bessieService *bessie.Service
+	ciscoService  *cisco.Service
 	healthService *health.Service
 }
 
@@ -90,29 +90,29 @@ func run(ctx context.Context, w io.Writer, _ []string) error {
 		return err
 	}
 
-	bessieService, err := newBessieService(dbPool, encryptor, riverClient, config, logger, auditRepository)
+	ciscoService, err := newCiscoService(dbPool, encryptor, riverClient, config, logger, auditRepository)
 	if err != nil {
 		return err
 	}
 
-	collector := bessiessh.NewInventoryCollector(bessiessh.Config{
-		Port:             config.Service.Bessie.SSH.Port,
-		Timeout:          config.Service.Bessie.SSH.Timeout,
-		TCPDialTimeout:   config.Service.Bessie.SSH.TCPDialTimeout,
-		OperationTimeout: config.Service.Bessie.SSH.OperationTimeout,
+	collector := ciscossh.NewInventoryCollector(ciscossh.Config{
+		Port:             config.Service.Cisco.SSH.Port,
+		Timeout:          config.Service.Cisco.SSH.Timeout,
+		TCPDialTimeout:   config.Service.Cisco.SSH.TCPDialTimeout,
+		OperationTimeout: config.Service.Cisco.SSH.OperationTimeout,
 	})
 
 	river.AddWorker(workers, auth.NewSendActivationEmailWorker(emailer))
 	river.AddWorker(workers, auth.NewSendPasswordResetEmailWorker(emailer))
 	river.AddWorker(workers, auditriverx.NewAuditLogWorker(auditRepository))
-	river.AddWorker(workers, bessie.NewSyncNetworkDeviceWorker(bessieService, collector))
+	river.AddWorker(workers, cisco.NewSyncNetworkDeviceWorker(ciscoService, collector))
 
 	app := &application{
 		logger:        logger,
 		config:        config,
 		riverClient:   riverClient,
 		authService:   authService,
-		bessieService: bessieService,
+		ciscoService:  ciscoService,
 		healthService: health.NewService(logger, version.Get()),
 	}
 
@@ -256,20 +256,20 @@ func newAuthService(dbPool *pgxpool.Pool, encryptor *krypto.Encryptor, riverClie
 	return service, nil
 }
 
-func newBessieService(dbPool *pgxpool.Pool, encryptor *krypto.Encryptor, riverClient *river.Client[pgx.Tx], config config.Config, logger *slog.Logger, auditRepository audit.AuditLogRepository) (*bessie.Service, error) {
-	service, err := bessie.NewService(
-		bessiepostgres.NewStore(dbPool, encryptor, config.DB.BlindIndex, riverClient),
-		bessie.ServiceConfig{},
+func newCiscoService(dbPool *pgxpool.Pool, encryptor *krypto.Encryptor, riverClient *river.Client[pgx.Tx], config config.Config, logger *slog.Logger, auditRepository audit.AuditLogRepository) (*cisco.Service, error) {
+	service, err := cisco.NewService(
+		ciscopostgres.NewStore(dbPool, encryptor, config.DB.BlindIndex, riverClient),
+		cisco.ServiceConfig{},
 		logger.With(
 			slog.String("component", "app"),
-			slog.String("subsystem", "bessie"),
+			slog.String("subsystem", "cisco"),
 		),
 		auditRepository,
-		bessiepostgres.NewCredentialRepository(dbPool, encryptor, config.DB.BlindIndex),
-		bessiepostgres.NewNetworkDeviceRepository(dbPool),
+		ciscopostgres.NewCredentialRepository(dbPool, encryptor, config.DB.BlindIndex),
+		ciscopostgres.NewNetworkDeviceRepository(dbPool),
 	)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create and initialize %q subsystem: %w", "bessie", err)
+		return nil, fmt.Errorf("failed to create and initialize %q subsystem: %w", "cisco", err)
 	}
 
 	return service, nil
