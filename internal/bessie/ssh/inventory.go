@@ -26,11 +26,7 @@ func (c *InventoryCollector) ensureReachable(ctx context.Context, ipAddress neti
 
 	dialer := net.Dialer{}
 
-	conn, err := dialer.DialContext(
-		dialCtx,
-		"tcp",
-		net.JoinHostPort(ipAddress.String(), strconv.Itoa(c.config.Port)),
-	)
+	conn, err := dialer.DialContext(dialCtx, "tcp", net.JoinHostPort(ipAddress.String(), strconv.Itoa(c.config.Port)))
 	if err != nil {
 		return fmt.Errorf("%w: %w", bessie.ErrDiscovererConnectionFailed, err)
 	}
