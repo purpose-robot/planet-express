@@ -8,7 +8,7 @@ import (
 
 var (
 	ErrDuplicateAuthMethod = errors.New("credentials already exists")
-	// The following errors are used to provide better error handling using SSH.
+	// The following errors are used to provide better error handling with SSH.
 	ErrDiscovererCommandFailed        = errors.New("discoverer: command failed")
 	ErrDiscovererInvalidOptions       = errors.New("discoverer: invalid options")
 	ErrDiscovererConnectionLost       = errors.New("discoverer: connection lost")
