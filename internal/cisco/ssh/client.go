@@ -77,7 +77,7 @@ func (c *Client) fetchString(ctx context.Context, input, templatePath, key strin
 
 	value, ok := rows[0][key].(string)
 	if !ok || strings.TrimSpace(value) == "" {
-		return "", fmt.Errorf("%w: missing or invalid key %q", cisco.ErrDiscovererUnexpectedOutput, key)
+		return "", fmt.Errorf("%w: missing key %q", cisco.ErrDiscovererUnexpectedOutput, key)
 	}
 
 	return strings.TrimSpace(value), nil
