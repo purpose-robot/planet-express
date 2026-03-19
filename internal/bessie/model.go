@@ -174,8 +174,9 @@ type NetworkDevice struct {
 	serialNumber        *string
 	productID           *string
 	softwareVersion     *string
+	sshActive           *bool
+	netconfActive       *bool
 	lastSyncStatus      SyncStatus
-	lastSyncReachable   *bool
 	lastSyncAttemptedAt *time.Time
 }
 
@@ -218,12 +219,16 @@ func (nd *NetworkDevice) SoftwareVersion() *string {
 	return nd.softwareVersion
 }
 
-func (nd *NetworkDevice) LastSyncStatus() SyncStatus {
-	return nd.lastSyncStatus
+func (nd *NetworkDevice) SSHActive() *bool {
+	return nd.sshActive
 }
 
-func (nd *NetworkDevice) LastSyncReachable() *bool {
-	return nd.lastSyncReachable
+func (nd *NetworkDevice) NetconfActive() *bool {
+	return nd.netconfActive
+}
+
+func (nd *NetworkDevice) LastSyncStatus() SyncStatus {
+	return nd.lastSyncStatus
 }
 
 func (nd *NetworkDevice) LastSyncAttemptedAt() *time.Time {
@@ -241,8 +246,8 @@ func (nd *NetworkDevice) ApplyReachableSyncFailure() {
 	now := time.Now().UTC()
 
 	nd.updatedAt = now
+	nd.sshActive = new(true)
 	nd.lastSyncStatus = SyncStatusFailure
-	nd.lastSyncReachable = new(true)
 	nd.lastSyncAttemptedAt = &now
 }
 
@@ -250,8 +255,9 @@ func (nd *NetworkDevice) ApplyUnreachableSyncFailure() {
 	now := time.Now().UTC()
 
 	nd.updatedAt = now
+	nd.sshActive = new(false)
+	nd.netconfActive = new(false)
 	nd.lastSyncStatus = SyncStatusFailure
-	nd.lastSyncReachable = new(false)
 	nd.lastSyncAttemptedAt = &now
 }
 
@@ -263,8 +269,8 @@ func (nd *NetworkDevice) ApplySyncSuccess(results NetworkDeviceInventory) {
 	nd.serialNumber = new(results.SerialNumber)
 	nd.productID = new(results.ProductID)
 	nd.softwareVersion = new(results.SoftwareVersion)
+	nd.sshActive = new(true)
 	nd.lastSyncStatus = SyncStatusSuccess
-	nd.lastSyncReachable = new(true)
 	nd.lastSyncAttemptedAt = &now
 }
 
@@ -309,7 +315,7 @@ func ParseIPAddress(raw string) (netip.Addr, error) {
 	return ipAddress, nil
 }
 
-func UnmarshalNetworkDevice(id uuid.UUID, createdAt, updatedAt time.Time, ipAddress netip.Addr, hostname *string, serialNumber, productID, softwareVersion *string, lastSyncStatus SyncStatus, lastSyncReachable *bool, lastSyncAttemptedAt *time.Time) *NetworkDevice {
+func UnmarshalNetworkDevice(id uuid.UUID, createdAt, updatedAt time.Time, ipAddress netip.Addr, hostname *string, serialNumber, productID, softwareVersion *string, sshActive, netconfActive *bool, lastSyncStatus SyncStatus, lastSyncAttemptedAt *time.Time) *NetworkDevice {
 	return &NetworkDevice{
 		id:                  id,
 		createdAt:           createdAt,
@@ -319,8 +325,9 @@ func UnmarshalNetworkDevice(id uuid.UUID, createdAt, updatedAt time.Time, ipAddr
 		serialNumber:        serialNumber,
 		productID:           productID,
 		softwareVersion:     softwareVersion,
+		sshActive:           sshActive,
+		netconfActive:       netconfActive,
 		lastSyncStatus:      lastSyncStatus,
-		lastSyncReachable:   lastSyncReachable,
 		lastSyncAttemptedAt: lastSyncAttemptedAt,
 	}
 }
