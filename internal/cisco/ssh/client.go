@@ -90,17 +90,17 @@ func (c *Client) parseMap(ctx context.Context, input, templatePath string) ([]ma
 	}
 
 	if resp.Failed() {
-		return nil, fmt.Errorf("%w: %s", cisco.ErrDiscovererInputFailed, strings.TrimSpace(resp.ResultsFailedIndicator))
+		return nil, fmt.Errorf("%w: %s", cisco.ErrDiscovererCommandFailed, strings.TrimSpace(resp.ResultsFailedIndicator))
 	}
 
 	template, err := templatesFS.ReadFile(templatePath)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %w", cisco.ErrDiscovererInvalidOptions, err)
+		return nil, fmt.Errorf("%w: %w", cisco.ErrDiscovererInvalidTemplate, err)
 	}
 
 	fsm := gotextfsm.TextFSM{}
 	if err := fsm.ParseString(string(template)); err != nil {
-		return nil, fmt.Errorf("%w: %w", cisco.ErrDiscovererInvalidOptions, err)
+		return nil, fmt.Errorf("%w: %w", cisco.ErrDiscovererInvalidTemplate, err)
 	}
 
 	output := gotextfsm.ParserOutput{}

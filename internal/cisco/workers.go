@@ -95,9 +95,9 @@ func (w *SyncNetworkDeviceWorker) Work(ctx context.Context, job *river.Job[SyncN
 }
 
 func shouldRetrySync(err error) bool {
-	return errors.Is(err, ErrDiscovererConnectionFailed) || errors.Is(err, ErrDiscovererConnectionLost)
+	return errors.Is(err, ErrDiscovererConnectionLost) || errors.Is(err, ErrDiscovererConnectionFailed)
 }
 
 func shouldCancelSync(err error) bool {
-	return errors.Is(err, ErrDiscovererInputFailed) || errors.Is(err, ErrDiscovererUnexpectedOutput) || errors.Is(err, ErrDiscovererInvalidOptions)
+	return errors.Is(err, ErrDiscovererCommandFailed) || errors.Is(err, ErrDiscovererInvalidOptions) || errors.Is(err, ErrDiscovererInvalidTemplate) || errors.Is(err, ErrDiscovererUnexpectedOutput)
 }
