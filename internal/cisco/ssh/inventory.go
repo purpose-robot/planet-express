@@ -63,7 +63,7 @@ func (c *InventoryCollector) Collect(ctx context.Context, ipAddress netip.Addr, 
 		return cisco.NetworkDeviceInventory{}, err
 	}
 	defer func() {
-		closeCtx, cancel := context.WithTimeout(context.Background(), c.config.Timeout)
+		closeCtx, cancel := context.WithTimeout(context.Background(), c.config.CloseTimeout)
 		defer cancel()
 
 		_ = client.Close(closeCtx)

@@ -99,5 +99,5 @@ func shouldRetrySync(err error) bool {
 }
 
 func shouldCancelSync(err error) bool {
-	return errors.Is(err, ErrDiscovererCommandFailed) || errors.Is(err, ErrDiscovererInvalidOptions) || errors.Is(err, ErrDiscovererInvalidTemplate) || errors.Is(err, ErrDiscovererUnexpectedOutput)
+	return errors.Is(err, ErrDiscovererInputFailed) || errors.Is(err, ErrDiscovererInvalidOptions) || errors.Is(err, ErrDiscovererInvalidTemplate) || errors.Is(err, ErrDiscovererUnexpectedOutput)
 }
