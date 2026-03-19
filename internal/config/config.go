@@ -96,7 +96,7 @@ type ciscoServiceConfig struct {
 
 type ciscoSSHConfig struct {
 	Port             int
-	Timeout          time.Duration
+	CloseTimeout     time.Duration
 	TCPDialTimeout   time.Duration
 	OperationTimeout time.Duration
 }
@@ -139,7 +139,7 @@ func defaultConfig() Config {
 			Cisco: ciscoServiceConfig{
 				SSH: ciscoSSHConfig{
 					Port:             22,
-					Timeout:          10 * time.Second,
+					CloseTimeout:     10 * time.Second,
 					TCPDialTimeout:   10 * time.Second,
 					OperationTimeout: 10 * time.Second,
 				},
@@ -338,21 +338,21 @@ var envMap = map[string]envVariable{
 		},
 	},
 
-	"SERVICE_CISCO_SSH_TIMEOUT": {
+	"SERVICE_CISCO_SSH_CLOSE_TIMEOUT": {
 		mapFunc: func(v string, c *Config) error {
-			return confDuration(v, &c.Service.Cisco.SSH.Timeout, time.Second, 30*time.Second)
+			return confDuration(v, &c.Service.Cisco.SSH.CloseTimeout, 10*time.Second, 30*time.Second)
 		},
 	},
 
 	"SERVICE_CISCO_SSH_TCP_DIAL_TIMEOUT": {
 		mapFunc: func(v string, c *Config) error {
-			return confDuration(v, &c.Service.Cisco.SSH.TCPDialTimeout, time.Second, time.Minute)
+			return confDuration(v, &c.Service.Cisco.SSH.TCPDialTimeout, 10*time.Second, 30*time.Second)
 		},
 	},
 
 	"SERVICE_CISCO_SSH_OPERATION_TIMEOUT": {
 		mapFunc: func(v string, c *Config) error {
-			return confDuration(v, &c.Service.Cisco.SSH.OperationTimeout, time.Second, 2*time.Minute)
+			return confDuration(v, &c.Service.Cisco.SSH.OperationTimeout, 10*time.Second, 30*time.Second)
 		},
 	},
 }
