@@ -2,9 +2,7 @@ package bessie
 
 import (
 	"fmt"
-	"net"
 	"net/netip"
-	"slices"
 	"strings"
 	"time"
 
@@ -173,7 +171,6 @@ type NetworkDevice struct {
 	updatedAt           time.Time
 	ipAddress           netip.Addr
 	hostname            *string
-	macAddress          *net.HardwareAddr
 	serialNumber        *string
 	productID           *string
 	softwareVersion     *string
@@ -209,10 +206,6 @@ func (nd *NetworkDevice) Hostname() *string {
 	return nd.hostname
 }
 
-func (nd *NetworkDevice) MacAddress() *net.HardwareAddr {
-	return nd.macAddress
-}
-
 func (nd *NetworkDevice) SerialNumber() *string {
 	return nd.serialNumber
 }
@@ -239,7 +232,6 @@ func (nd *NetworkDevice) LastSyncAttemptedAt() *time.Time {
 
 type NetworkDeviceInventory struct {
 	Hostname        string
-	MACAddress      net.HardwareAddr
 	SerialNumber    string
 	ProductID       string
 	SoftwareVersion string
@@ -274,12 +266,6 @@ func (nd *NetworkDevice) ApplySyncSuccess(results NetworkDeviceInventory) {
 	nd.lastSyncStatus = SyncStatusSuccess
 	nd.lastSyncReachable = new(true)
 	nd.lastSyncAttemptedAt = &now
-
-	if len(results.MACAddress) == 0 {
-		nd.macAddress = nil
-	} else {
-		nd.macAddress = new(slices.Clone(results.MACAddress))
-	}
 }
 
 func NewNetworkDevice(ipAddress string) (*NetworkDevice, error) {
@@ -323,14 +309,13 @@ func ParseIPAddress(raw string) (netip.Addr, error) {
 	return ipAddress, nil
 }
 
-func UnmarshalNetworkDevice(id uuid.UUID, createdAt, updatedAt time.Time, ipAddress netip.Addr, hostname *string, macAddress *net.HardwareAddr, serialNumber, productID, softwareVersion *string, lastSyncStatus SyncStatus, lastSyncReachable *bool, lastSyncAttemptedAt *time.Time) *NetworkDevice {
+func UnmarshalNetworkDevice(id uuid.UUID, createdAt, updatedAt time.Time, ipAddress netip.Addr, hostname *string, serialNumber, productID, softwareVersion *string, lastSyncStatus SyncStatus, lastSyncReachable *bool, lastSyncAttemptedAt *time.Time) *NetworkDevice {
 	return &NetworkDevice{
 		id:                  id,
 		createdAt:           createdAt,
 		updatedAt:           updatedAt,
 		ipAddress:           ipAddress,
 		hostname:            hostname,
-		macAddress:          macAddress,
 		serialNumber:        serialNumber,
 		productID:           productID,
 		softwareVersion:     softwareVersion,

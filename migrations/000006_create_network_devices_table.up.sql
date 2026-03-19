@@ -4,7 +4,6 @@ CREATE TABLE plnx_network_devices (
     updated_at             TIMESTAMPTZ NOT NULL,
     ip_address             INET        NOT NULL UNIQUE,
     hostname               TEXT,
-    mac_address            MACADDR,
     serial_number          TEXT,
     product_id             TEXT,
     software_version       TEXT,

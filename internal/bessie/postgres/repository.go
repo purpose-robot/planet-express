@@ -2,7 +2,6 @@ package postgres
 
 import (
 	"context"
-	"net"
 	"net/netip"
 	"time"
 
@@ -127,7 +126,6 @@ func (r *NetworkDeviceRepository) scanNetworkDevice(row pgx.Row) (*bessie.Networ
 		updatedAt           time.Time
 		ipAddress           netip.Addr
 		hostname            *string
-		macAddress          *net.HardwareAddr
 		serialNumber        *string
 		productID           *string
 		softwareVersion     *string
@@ -142,7 +140,6 @@ func (r *NetworkDeviceRepository) scanNetworkDevice(row pgx.Row) (*bessie.Networ
 		&updatedAt,
 		&ipAddress,
 		&hostname,
-		&macAddress,
 		&serialNumber,
 		&productID,
 		&softwareVersion,
@@ -156,7 +153,7 @@ func (r *NetworkDeviceRepository) scanNetworkDevice(row pgx.Row) (*bessie.Networ
 		return nil, mapRepositoryError(err)
 	}
 
-	return bessie.UnmarshalNetworkDevice(id, createdAt, updatedAt, ipAddress, hostname, macAddress, serialNumber, productID, softwareVersion, lastSyncStatus, lastSyncReachable, lastSyncAttemptedAt), nil
+	return bessie.UnmarshalNetworkDevice(id, createdAt, updatedAt, ipAddress, hostname, serialNumber, productID, softwareVersion, lastSyncStatus, lastSyncReachable, lastSyncAttemptedAt), nil
 }
 
 func (r *NetworkDeviceRepository) Insert(ctx context.Context, networkDevice *bessie.NetworkDevice) (bool, error) {
@@ -181,7 +178,7 @@ func (r *NetworkDeviceRepository) Insert(ctx context.Context, networkDevice *bes
 
 func (r *NetworkDeviceRepository) GetByID(ctx context.Context, id uuid.UUID) (*bessie.NetworkDevice, error) {
 	stmt := `
-		SELECT id, created_at, updated_at, ip_address, hostname, mac_address, serial_number, product_id, software_version, last_sync_status, last_sync_reachable, last_sync_attempted_at
+		SELECT id, created_at, updated_at, ip_address, hostname, serial_number, product_id, software_version, last_sync_status, last_sync_reachable, last_sync_attempted_at
 		FROM plnx_network_devices
 		WHERE id = @id`
 
@@ -190,7 +187,7 @@ func (r *NetworkDeviceRepository) GetByID(ctx context.Context, id uuid.UUID) (*b
 
 func (r *NetworkDeviceRepository) UpdateByID(ctx context.Context, id uuid.UUID, updateFn func(nd *bessie.NetworkDevice) error) error {
 	selectStmt := `
-		SELECT id, created_at, updated_at, ip_address, hostname, mac_address, serial_number, product_id, software_version, last_sync_status, last_sync_reachable, last_sync_attempted_at
+		SELECT id, created_at, updated_at, ip_address, hostname, serial_number, product_id, software_version, last_sync_status, last_sync_reachable, last_sync_attempted_at
 		FROM plnx_network_devices
 		WHERE id = @id FOR UPDATE`
 
@@ -210,7 +207,6 @@ func (r *NetworkDeviceRepository) UpdateByID(ctx context.Context, id uuid.UUID, 
 			updated_at = @updated_at,
 			ip_address = @ip_address,
 			hostname = @hostname,
-			mac_address = @mac_address,
 			serial_number = @serial_number,
 			product_id = @product_id,
 			software_version = @software_version,
@@ -224,7 +220,6 @@ func (r *NetworkDeviceRepository) UpdateByID(ctx context.Context, id uuid.UUID, 
 		"updated_at":             networkDevice.UpdatedAt(),
 		"ip_address":             networkDevice.IPAddress(),
 		"hostname":               networkDevice.Hostname(),
-		"mac_address":            networkDevice.MacAddress(),
 		"serial_number":          networkDevice.SerialNumber(),
 		"product_id":             networkDevice.ProductID(),
 		"software_version":       networkDevice.SoftwareVersion(),
