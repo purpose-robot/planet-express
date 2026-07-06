@@ -22,6 +22,8 @@ func NewAuditLogJobRepository(tx pgx.Tx, riverClient *river.Client[pgx.Tx]) *Aud
 
 func (r *AuditLogJobRepository) Insert(ctx context.Context, auditLog *audit.AuditLog) error {
 	args := auditLogArgs{
+		ID:           auditLog.ID(),
+		CreatedAt:    auditLog.CreatedAt(),
 		Action:       string(auditLog.Action()),
 		UserID:       auditLog.UserID(),
 		ResourceID:   auditLog.ResourceID(),
