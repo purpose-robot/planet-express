@@ -103,6 +103,12 @@ type ciscoSSHConfig struct {
 
 func defaultConfig() Config {
 	return Config{
+		DB: dbConfig{
+			Postgres: postgresConfig{
+				Port: 5432,
+				Host: "localhost",
+			},
+		},
 		HTTP: httpConfig{
 			Port: 11880,
 			Limiter: limiterConfig{
@@ -150,6 +156,7 @@ func defaultConfig() Config {
 
 type envVariable struct {
 	req     bool
+	reqIf   func(c Config) bool
 	mapFunc func(v string, c *Config) error
 }
 
@@ -162,6 +169,7 @@ var envMap = map[string]envVariable{
 	},
 
 	"DB_POSTGRES_NAME": {
+		reqIf: requireDBKind("postgres"),
 		mapFunc: func(v string, c *Config) error {
 			return confString(v, &c.DB.Postgres.Name, 1, maxStringLength)
 		},
@@ -180,12 +188,14 @@ var envMap = map[string]envVariable{
 	},
 
 	"DB_POSTGRES_USERNAME": {
+		reqIf: requireDBKind("postgres"),
 		mapFunc: func(v string, c *Config) error {
 			return confString(v, &c.DB.Postgres.Username, 1, maxStringLength)
 		},
 	},
 
 	"DB_POSTGRES_PASSWORD": {
+		reqIf: requireDBKind("postgres"),
 		mapFunc: func(v string, c *Config) error {
 			return confString(v, &c.DB.Postgres.Password, 1, maxStringLength)
 		},
@@ -261,24 +271,28 @@ var envMap = map[string]envVariable{
 	},
 
 	"EMAIL_SMTP_PORT": {
+		reqIf: requireEmailKind("smtp"),
 		mapFunc: func(v string, c *Config) error {
 			return confInt(v, &c.Email.SMTP.Port, 1, 65535)
 		},
 	},
 
 	"EMAIL_SMTP_HOST": {
+		reqIf: requireEmailKind("smtp"),
 		mapFunc: func(v string, c *Config) error {
 			return confString(v, &c.Email.SMTP.Host, 1, maxStringLength)
 		},
 	},
 
 	"EMAIL_SMTP_USERNAME": {
+		reqIf: requireEmailKind("smtp"),
 		mapFunc: func(v string, c *Config) error {
 			return confString(v, &c.Email.SMTP.Username, 1, maxStringLength)
 		},
 	},
 
 	"EMAIL_SMTP_PASSWORD": {
+		reqIf: requireEmailKind("smtp"),
 		mapFunc: func(v string, c *Config) error {
 			return confString(v, &c.Email.SMTP.Password, 1, maxStringLength)
 		},
@@ -358,26 +372,47 @@ var envMap = map[string]envVariable{
 }
 
 func New() (Config, error) {
-	config := defaultConfig()
-
 	var errMap error
 
-	for key, value := range envMap {
-		found, ok := os.LookupEnv(key)
-		if !ok {
-			if value.req {
-				errMap = errors.Join(errMap, fmt.Errorf("missing required environment variable %s", key))
-			}
+	config := defaultConfig()
+	exists := make(map[string]bool, len(envMap))
 
+	for key, variable := range envMap {
+		value, ok := os.LookupEnv(key)
+		if !ok {
 			continue
 		}
 
-		if err := value.mapFunc(found, &config); err != nil {
-			errMap = errors.Join(errMap, fmt.Errorf("failed to load environment variable %s: %w", key, err))
+		exists[key] = true
+
+		if err := variable.mapFunc(value, &config); err != nil {
+			errMap = errors.Join(errMap, fmt.Errorf("failed to load env variable %s: %w", key, err))
+		}
+	}
+
+	for key, variable := range envMap {
+		if exists[key] {
+			continue
+		}
+
+		if variable.req || (variable.reqIf != nil && variable.reqIf(config)) {
+			errMap = errors.Join(errMap, fmt.Errorf("missing required environment variable %s", key))
 		}
 	}
 
 	return config, errMap
+}
+
+func requireDBKind(kind string) func(Config) bool {
+	return func(c Config) bool {
+		return c.DB.Kind == kind
+	}
+}
+
+func requireEmailKind(kind string) func(Config) bool {
+	return func(c Config) bool {
+		return c.Email.Kind == kind
+	}
 }
 
 func confInt(v string, out *int, min, max int) error {
