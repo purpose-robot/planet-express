@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -13,26 +14,28 @@ import (
 	"github.com/riverqueue/river"
 )
 
-func runInTx(ctx context.Context, dbPool *pgxpool.Pool, fn func(tx pgx.Tx) error) error {
+func runInTx(ctx context.Context, dbPool *pgxpool.Pool, fn func(tx pgx.Tx) error) (err error) {
 	tx, err := dbPool.Begin(ctx)
 	if err != nil {
 		return err
 	}
 
+	defer func() {
+		rollbackCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), 5*time.Second)
+		defer cancel()
+
+		rollbackErr := tx.Rollback(rollbackCtx)
+		if rollbackErr != nil && !errors.Is(rollbackErr, pgx.ErrTxClosed) {
+			err = fmt.Errorf("failed to rollback database changes; got: %w; %w", err, rollbackErr)
+		}
+	}()
+
 	err = fn(tx)
-	if err == nil {
-		return tx.Commit(ctx)
+	if err != nil {
+		return err
 	}
 
-	rollbackCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	rollbackErr := tx.Rollback(rollbackCtx)
-	if rollbackErr != nil {
-		return fmt.Errorf("failed to rollback DB changes; got: %w; %w", err, rollbackErr)
-	}
-
-	return err
+	return tx.Commit(ctx)
 }
 
 type Store struct {
