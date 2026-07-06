@@ -132,13 +132,11 @@ func ParseUsername(raw string) (string, error) {
 }
 
 func ParsePassword(raw string) (string, error) {
-	trimmed := strings.TrimSpace(raw)
-
-	if trimmed == "" {
+	if strings.TrimSpace(raw) == "" {
 		return "", errorz.ValidationFailed{Field: "password", Message: "cannot be empty"}
 	}
 
-	return trimmed, nil
+	return raw, nil
 }
 
 func ParseAuthMethod(raw string) (AuthMethod, error) {

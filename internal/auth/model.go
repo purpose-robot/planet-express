@@ -176,12 +176,11 @@ func ParseEmail(raw string) (string, error) {
 }
 
 func ParsePassword(raw string) (string, error) {
-	trimmed := strings.TrimSpace(raw)
-	runeLen := utf8.RuneCountInString(trimmed)
-
-	if trimmed == "" {
+	if raw == "" {
 		return "", errorz.ValidationFailed{Field: "password", Message: "cannot be empty"}
 	}
+
+	runeLen := utf8.RuneCountInString(raw)
 
 	if runeLen < 24 {
 		return "", errorz.ValidationFailed{Field: "password", Message: "password must be at least 24 characters"}
@@ -191,7 +190,7 @@ func ParsePassword(raw string) (string, error) {
 		return "", errorz.ValidationFailed{Field: "password", Message: "password must be less than 96 characters"}
 	}
 
-	return trimmed, nil
+	return raw, nil
 }
 
 func UnmarshalUser(id uuid.UUID, createdAt, updatedAt time.Time, activated bool, email string, hashedPassword krypto.Argon2Hash) *User {
