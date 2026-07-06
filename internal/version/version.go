@@ -16,7 +16,7 @@ func Get() string {
 		for _, setting := range bi.Settings {
 			switch setting.Key {
 			case "vcs.revision":
-				revision = setting.Value[:7]
+				revision = setting.Value
 
 			case "vcs.modified":
 				if setting.Value == "true" {

@@ -117,7 +117,7 @@ func defaultConfig() Config {
 				Burst:   100,
 				Enabled: true,
 			},
-			IdleTimeout:     time.Minute,
+			IdleTimeout:     30 * time.Second,
 			ReadTimeout:     5 * time.Second,
 			WriteTimeout:    10 * time.Second,
 			ShutdownTimeout: 10 * time.Second,
