@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/mail"
 	"os"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -164,7 +165,7 @@ var envMap = map[string]envVariable{
 	"DB_KIND": {
 		req: true,
 		mapFunc: func(v string, c *Config) error {
-			return confString(v, &c.DB.Kind, 1, maxStringLength)
+			return confEnum(v, &c.DB.Kind, "postgres")
 		},
 	},
 
@@ -266,7 +267,7 @@ var envMap = map[string]envVariable{
 	"EMAIL_KIND": {
 		req: true,
 		mapFunc: func(v string, c *Config) error {
-			return confString(v, &c.Email.Kind, 1, maxStringLength)
+			return confEnum(v, &c.Email.Kind, "smtp")
 		},
 	},
 
@@ -476,6 +477,17 @@ func confCryptoKey(v string, out *krypto.Key) error {
 	}
 
 	*out = k
+	return nil
+}
+
+func confEnum(v string, out *string, allowed ...string) error {
+	trimmed := strings.TrimSpace(v)
+
+	if !slices.Contains(allowed, trimmed) {
+		return fmt.Errorf("unsupported value %q, expected one of %s", trimmed, strings.Join(allowed, ", "))
+	}
+
+	*out = trimmed
 	return nil
 }
 
