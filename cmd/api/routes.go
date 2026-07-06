@@ -40,9 +40,6 @@ func (app *application) routes() http.Handler {
 		authMiddleware.RequirePermission(health.PermissionRead, healthTransport.CheckHealth),
 	)
 
-	// PUT  /api/v1/network-devices/sync
-	// POST /api/v1/discovery
-
 	mux.HandleFunc(
 		"POST /api/v1/credentials",
 		authMiddleware.RequirePermission(cisco.PermissionCredentialsWrite, ciscoTransport.AddCredential),
