@@ -139,16 +139,18 @@ func newLogger(w io.Writer) *slog.Logger {
 func newDBPool(ctx context.Context, config config.Config) (*pgxpool.Pool, error) {
 	switch config.DB.Kind {
 	case "postgres":
-		connString := fmt.Sprintf(
-			"dbname=%s host=%s port=%d user=%s password=%s",
-			config.DB.Postgres.Name,
-			config.DB.Postgres.Host,
-			config.DB.Postgres.Port,
-			config.DB.Postgres.Username,
-			config.DB.Postgres.Password,
-		)
+		connString, err := pgxpool.ParseConfig("")
+		if err != nil {
+			return nil, fmt.Errorf("failed to creater default pool configuration: %w", err)
+		}
 
-		dbPool, err := pgxpool.New(ctx, connString)
+		connString.ConnConfig.Host = config.DB.Postgres.Host
+		connString.ConnConfig.Port = uint16(config.DB.Postgres.Port)
+		connString.ConnConfig.Database = config.DB.Postgres.Name
+		connString.ConnConfig.User = config.DB.Postgres.Username
+		connString.ConnConfig.Password = config.DB.Postgres.Password
+
+		dbPool, err := pgxpool.NewWithConfig(ctx, connString)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create connection pool: %w", err)
 		}
